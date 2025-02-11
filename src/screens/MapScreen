@@ -1,1 +1,379 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
+interface Location {
+  id: string;
+  name: string;
+  type: 'INCIDENT' | 'RESOURCE' | 'TEAM';
+  status: 'ACTIVE' | 'RESOLVED' | 'PENDING';
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  description: string;
+  lastUpdate: string;
+  resources: number;
+  personnel: number;
+}
+
+export default function MapScreen() {
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [locations] = useState<Location[]>([
+    {
+      id: '1',
+      name: 'Downtown Flooding',
+      type: 'INCIDENT',
+      status: 'ACTIVE',
+      coordinates: {
+        latitude: 37.7849,
+        longitude: -122.3968,
+      },
+      description: 'Major flooding affecting downtown area. Multiple rescue operations in progress.',
+      lastUpdate: '5m ago',
+      resources: 12,
+      personnel: 45,
+    },
+    {
+      id: '2',
+      name: 'Medical Center',
+      type: 'RESOURCE',
+      status: 'ACTIVE',
+      coordinates: {
+        latitude: 37.7833,
+        longitude: -122.4167,
+      },
+      description: 'Emergency medical supplies and personnel stationed here.',
+      lastUpdate: '15m ago',
+      resources: 35,
+      personnel: 20,
+    },
+    {
+      id: '3',
+      name: 'Response Team Alpha',
+      type: 'TEAM',
+      status: 'ACTIVE',
+      coordinates: {
+        latitude: 37.7855,
+        longitude: -122.4001,
+      },
+      description: 'Search and rescue team deployed for flood response.',
+      lastUpdate: '2m ago',
+      resources: 8,
+      personnel: 12,
+    },
+  ]);
+
+  const getLocationIcon = (type: string) => {
+    switch (type) {
+      case 'INCIDENT':
+        return 'alert-circle';
+      case 'RESOURCE':
+        return 'package-variant';
+      case 'TEAM':
+        return 'account-group';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ACTIVE':
+        return ['#FF416C', '#FF4B2B'];
+      case 'RESOLVED':
+        return ['#27AE60', '#219653'];
+      case 'PENDING':
+        return ['#F2994A', '#F2C94C'];
+    }
+  };
+
+  // Simulated map image URL using the AI image generation API
+  const mapImageUrl = "https://api.a0.dev/assets/image?text=satellite%20view%20of%20city%20with%20emergency%20markers%20and%20flooding&aspect=16:9";
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Emergency Map</Text>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="layers-outline" size={24} color="#2F80ED" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="filter" size={24} color="#2F80ED" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.mapContainer}>
+        {/* Map would be rendered here - using Image for demo */}
+        <View style={styles.map}>
+          <Image 
+            source={{ uri: mapImageUrl }}
+            style={styles.mapImage}
+            resizeMode="cover"
+          />
+        </View>
+
+        <ScrollView
+          horizontal
+          style={styles.locationList}
+          showsHorizontalScrollIndicator={false}>
+          {locations.map((location) => (
+            <TouchableOpacity
+              key={location.id}
+              onPress={() => setSelectedLocation(location)}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                style={[
+                  styles.locationCard,
+                  selectedLocation?.id === location.id && styles.selectedCard,
+                ]}>
+                <View style={styles.locationHeader}>
+                  <MaterialCommunityIcons
+                    name={getLocationIcon(location.type)}
+                    size={24}
+                    color="#2F80ED"
+                  />
+                  <LinearGradient
+                    colors={getStatusColor(location.status)}
+                    style={styles.statusBadge}>
+                    <Text style={styles.statusText}>{location.status}</Text>
+                  </LinearGradient>
+                </View>
+                <Text style={styles.locationName}>{location.name}</Text>
+                <Text style={styles.locationDescription} numberOfLines={2}>
+                  {location.description}
+                </Text>
+                <View style={styles.locationFooter}>
+                  <View style={styles.statsContainer}>
+                    <MaterialCommunityIcons name="package-variant" size={16} color="#666" />
+                    <Text style={styles.statsText}>{location.resources}</Text>
+                  </View>
+                  <View style={styles.statsContainer}>
+                    <MaterialCommunityIcons name="account-group" size={16} color="#666" />
+                    <Text style={styles.statsText}>{location.personnel}</Text>
+                  </View>
+                  <Text style={styles.updateText}>{location.lastUpdate}</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {selectedLocation && (
+        <View style={styles.detailsPanel}>
+          <View style={styles.detailsHeader}>
+            <View style={styles.detailsTitleContainer}>
+              <MaterialCommunityIcons
+                name={getLocationIcon(selectedLocation.type)}
+                size={24}
+                color="#2F80ED"
+              />
+              <Text style={styles.detailsTitle}>{selectedLocation.name}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSelectedLocation(null)}>
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.detailsDescription}>{selectedLocation.description}</Text>
+          <View style={styles.detailsStats}>
+            <View style={styles.detailsStat}>
+              <Text style={styles.detailsStatLabel}>Resources</Text>
+              <Text style={styles.detailsStatValue}>{selectedLocation.resources}</Text>
+            </View>
+            <View style={styles.detailsStat}>
+              <Text style={styles.detailsStatLabel}>Personnel</Text>
+              <Text style={styles.detailsStatValue}>{selectedLocation.personnel}</Text>
+            </View>
+            <View style={styles.detailsStat}>
+              <Text style={styles.detailsStatLabel}>Last Update</Text>
+              <Text style={styles.detailsStatValue}>{selectedLocation.lastUpdate}</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.actionButton}>
+            <Text style={styles.actionButtonText}>RESPOND TO LOCATION</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+  },
+  iconButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  mapContainer: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+    backgroundColor: '#E5E5E5',
+  },
+  mapImage: {
+    width: '100%',
+    height: '100%',
+  },
+  locationList: {
+    position: 'absolute',
+    bottom: 16,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 8,
+  },
+  locationCard: {
+    width: 280,
+    margin: 8,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+  },
+  selectedCard: {
+    borderColor: '#2F80ED',
+    borderWidth: 2,
+  },
+  locationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  statusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  locationName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginBottom: 4,
+  },
+  locationDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  locationFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  statsText: {
+    marginLeft: 4,
+    color: '#666',
+    fontSize: 14,
+  },
+  updateText: {
+    color: '#999',
+    fontSize: 12,
+    marginLeft: 'auto',
+  },
+  detailsPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  detailsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  detailsTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+    marginLeft: 8,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  detailsDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  detailsStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  detailsStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  detailsStatLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  detailsStatValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+  },
+  actionButton: {
+    backgroundColor: '#2F80ED',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+});
